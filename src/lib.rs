@@ -18,6 +18,7 @@ where
     K: Ord + Hash + 'a,
     F: FnMut(&'a K) -> V,
 {
+    #[inline]
     pub fn new(func: F) -> Self {
         Self {
             values: HashMap::new(),
@@ -25,6 +26,7 @@ where
         }
     }
 
+    #[inline]
     pub fn with_capacity(capacity: usize, func: F) -> Self {
         Self {
             values: HashMap::with_capacity(capacity),
@@ -52,40 +54,53 @@ where
         }
     }
 
+    #[inline]
     pub fn iter(&self) -> impl Iterator<Item = (&'a K, &V)> {
         self.values.iter().map(|(k, v)| (*k, v))
     }
 
+    #[inline]
     pub fn keys<'b>(&'b self) -> impl Iterator<Item = &'a K> + 'b {
         self.values.keys().map(|k| *k)
     }
 
+    #[inline]
     pub fn contains_key(&mut self, key: &'a K) -> bool {
         self.values.contains_key(key)
     }
 
+    #[inline]
     pub fn get(&mut self, key: &'a K) -> &V {
         if !self.values.contains_key(key) {
             let value = (self.func)(key);
             self.values.insert(key, value);
         }
 
-        self.values.get(key).unwrap()
+        match self.try_get(key) {
+            Some(value) => value,
+            None => unreachable!()
+        }
     }
 
+    #[inline]
     pub fn get_mut(&mut self, key: &'a K) -> &V {
         if !self.values.contains_key(key) {
             let value = (self.func)(key);
             self.values.insert(key, value);
         }
 
-        self.values.get_mut(key).unwrap()
+        match self.try_get_mut(key) {
+            Some(value) => value,
+            None => unreachable!()
+        }
     }
 
+    #[inline]
     pub fn try_get(&self, key: &'a K) -> Option<&V> {
         self.values.get(key)
     }
 
+    #[inline]
     pub fn try_get_mut(&mut self, key: &'a K) -> Option<&mut V> {
         self.values.get_mut(key)
     }
